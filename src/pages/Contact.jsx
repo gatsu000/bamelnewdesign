@@ -1,0 +1,7 @@
+import { ArrowRight, MapPin, Phone, Send } from 'lucide-react'
+import { CtaBand, MotionSection, PageHero, SpotlightCard } from '../components/shared'
+import TrueFocus from '../components/reactbits/TrueFocus'
+
+export default function Contact() {
+  return <main id="main-content" tabIndex="-1"><PageHero eyebrow="İletişim" title={<>Tesise ve ekibe <br/><em><TrueFocus sentence="ulaşın." manualMode={false} borderColor="var(--copper)" glowColor="var(--copper-glow)" blurAmount={3} animationDuration={1.2} /></em></>} copy="Üretim talebinizi, teknik sorularınızı veya tesis ziyaretine ilişkin talebinizi uygun kanaldan iletebilirsiniz."/><MotionSection className="section"><div className="container contact-grid"><SpotlightCard className="contact-article"><Phone/><h3>Telefonla görüşün</h3><p>Güncel telefon bilgisi yayın öncesi firma tarafından doğrulanmalıdır.</p></SpotlightCard><SpotlightCard className="contact-article"><Send/><h3>E-posta ile gönderin</h3><a className="text-link" href="mailto:info@bamelenerji.com">info@bamelenerji.com</a><p className="text-secondary">Teklif talepleri ve kurumsal iletişim için.</p></SpotlightCard><SpotlightCard className="contact-article"><MapPin/><h3>Yol tarifi alın</h3><p>Diyarbakır, Bağlar. Açık adres ve Google Maps pini resmî belgelerle karşılaştırılmalıdır.</p><a className="text-link" href="https://maps.app.goo.gl/ahaiv8nU1z8CscnJ7" target="_blank" rel="noreferrer">Haritayı aç <ArrowRight size={16}/></a></SpotlightCard></div></MotionSection><CtaBand/></main>
+}
