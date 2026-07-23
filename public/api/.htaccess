@@ -1,0 +1,16 @@
+# Bamel Enerji API directory - security hardening only.
+# The /api/quote -> /api/quote.php rewrite lives in the root .htaccess.
+
+# Disable directory browsing
+Options -Indexes
+
+# Block direct access to the request log
+<Files "quotes.log">
+  Require all denied
+</Files>
+
+# Fallback rewrite (in case root rules are bypassed)
+<IfModule mod_rewrite.c>
+  RewriteEngine On
+  RewriteRule ^quote/?$ quote.php [L,QSA]
+</IfModule>

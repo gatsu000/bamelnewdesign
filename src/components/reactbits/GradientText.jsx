@@ -1,0 +1,42 @@
+import { useState, useCallback, useRef } from 'react';
+import { motion, useMotionValue, useAnimationFrame, useTransform } from 'framer-motion';
+
+export default function GradientText({ children, className='', colors=['#d96226','#f28b55','#a64516'], animationSpeed=8, showBorder=false, direction='horizontal', pauseOnHover=false, yoyo=true }) {
+  const [isPaused, setIsPaused] = useState(false);
+  const progress = useMotionValue(0);
+  const elapsedRef = useRef(0);
+  const lastTimeRef = useRef(null);
+  const animationDuration = animationSpeed * 1000;
+
+  useAnimationFrame(time => {
+    if (isPaused) { lastTimeRef.current = null; return; }
+    if (lastTimeRef.current === null) { lastTimeRef.current = time; return; }
+    const deltaTime = time - lastTimeRef.current;
+    lastTimeRef.current = time;
+    elapsedRef.current += deltaTime;
+    if (yoyo) {
+      const fullCycle = animationDuration * 2;
+      const cycleTime = elapsedRef.current % fullCycle;
+      progress.set(cycleTime < animationDuration ? (cycleTime / animationDuration) * 100 : 100 - ((cycleTime - animationDuration) / animationDuration) * 100);
+    } else {
+      progress.set((elapsedRef.current / animationDuration) * 100);
+    }
+  });
+
+  const backgroundPosition = useTransform(progress, p => direction === 'vertical' ? `50% ${p}%` : `${p}% 50%`);
+  const handleMouseEnter = useCallback(() => { if (pauseOnHover) setIsPaused(true); }, [pauseOnHover]);
+  const handleMouseLeave = useCallback(() => { if (pauseOnHover) setIsPaused(false); }, [pauseOnHover]);
+  const gradientAngle = direction === 'horizontal' ? 'to right' : direction === 'vertical' ? 'to bottom' : 'to bottom right';
+  const gradientColors = [...colors, colors[0]].join(', ');
+  const gradientStyle = {
+    backgroundImage: `linear-gradient(${gradientAngle}, ${gradientColors})`,
+    backgroundSize: direction === 'horizontal' ? '300% 100%' : '100% 300%',
+    backgroundRepeat: 'repeat'
+  };
+
+  return (
+    <span onMouseEnter={handleMouseEnter} onMouseLeave={handleMouseLeave} style={{ position:'relative',display:'inline-block' }}>
+      <motion.span style={{ ...gradientStyle, backgroundPosition, WebkitBackgroundClip:'text', WebkitTextFillColor:'transparent', backgroundClip:'text', color:'transparent', display:'inline-block' }} className={className}>{children}</motion.span>
+    </span>
+  );
+}

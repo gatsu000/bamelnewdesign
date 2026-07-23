@@ -1,0 +1,88 @@
+{
+  "mcpServers": {
+    "hostinger-hosting": {
+      "command": "npx.cmd",
+      "args": [
+        "--package=hostinger-api-mcp@latest",
+        "hostinger-hosting-mcp"
+      ],
+      "env": {
+        "HOSTINGER_API_TOKEN": "APs4lHO3q1bF9m41I8aU4xGyYN4dcnR3Gop9KYZB7a64b4f0"
+      }
+    },
+    "hostinger-domains": {
+      "command": "npx.cmd",
+      "args": [
+        "--package=hostinger-api-mcp@latest",
+        "hostinger-domains-mcp"
+      ],
+      "env": {
+        "HOSTINGER_API_TOKEN": "APs4lHO3q1bF9m41I8aU4xGyYN4dcnR3Gop9KYZB7a64b4f0"
+      }
+    },
+    "hostinger-dns": {
+      "command": "npx.cmd",
+      "args": [
+        "--package=hostinger-api-mcp@latest",
+        "hostinger-dns-mcp"
+      ],
+      "env": {
+        "HOSTINGER_API_TOKEN": "APs4lHO3q1bF9m41I8aU4xGyYN4dcnR3Gop9KYZB7a64b4f0"
+      }
+    },
+    "hostinger-billing": {
+      "command": "npx.cmd",
+      "args": [
+        "--package=hostinger-api-mcp@latest",
+        "hostinger-billing-mcp"
+      ],
+      "env": {
+        "HOSTINGER_API_TOKEN": "APs4lHO3q1bF9m41I8aU4xGyYN4dcnR3Gop9KYZB7a64b4f0"
+      }
+    },
+    "hostinger-reach": {
+      "command": "npx.cmd",
+      "args": [
+        "--package=hostinger-api-mcp@latest",
+        "hostinger-reach-mcp"
+      ],
+      "env": {
+        "HOSTINGER_API_TOKEN": "APs4lHO3q1bF9m41I8aU4xGyYN4dcnR3Gop9KYZB7a64b4f0"
+      }
+    },
+    "hostinger-vps": {
+      "command": "npx.cmd",
+      "args": [
+        "--package=hostinger-api-mcp@latest",
+        "hostinger-vps-mcp"
+      ],
+      "env": {
+        "HOSTINGER_API_TOKEN": "APs4lHO3q1bF9m41I8aU4xGyYN4dcnR3Gop9KYZB7a64b4f0"
+      }
+    },
+    "hostinger-ecommerce": {
+      "command": "npx.cmd",
+      "args": [
+        "--package=hostinger-api-mcp@latest",
+        "hostinger-ecommerce-mcp"
+      ],
+      "env": {
+        "HOSTINGER_API_TOKEN": "APs4lHO3q1bF9m41I8aU4xGyYN4dcnR3Gop9KYZB7a64b4f0"
+      }
+    },
+    "shadcn": {
+      "command": "npx",
+      "args": [
+        "shadcn@latest",
+        "mcp"
+      ]
+    },
+    "21st": {
+      "transport": "http",
+      "url": "https://21st.dev/api/mcp",
+      "headers": {
+        "x-api-key": "21st_sk_19727e231a38ab3d33183ba90aa7572d1fc675007af220c769191ab05d293424"
+      }
+    }
+  }
+}
