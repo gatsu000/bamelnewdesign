@@ -1,15 +1,16 @@
 import { useState, useCallback, useRef } from 'react';
-import { motion, useMotionValue, useAnimationFrame, useTransform } from 'framer-motion';
+import { motion, useMotionValue, useAnimationFrame, useReducedMotion, useTransform } from 'framer-motion';
 
 export default function GradientText({ children, className='', colors=['#d96226','#f28b55','#a64516'], animationSpeed=8, showBorder=false, direction='horizontal', pauseOnHover=false, yoyo=true }) {
   const [isPaused, setIsPaused] = useState(false);
+  const reduced = useReducedMotion();
   const progress = useMotionValue(0);
   const elapsedRef = useRef(0);
   const lastTimeRef = useRef(null);
   const animationDuration = animationSpeed * 1000;
 
   useAnimationFrame(time => {
-    if (isPaused) { lastTimeRef.current = null; return; }
+    if (isPaused || reduced) { lastTimeRef.current = null; return; }
     if (lastTimeRef.current === null) { lastTimeRef.current = time; return; }
     const deltaTime = time - lastTimeRef.current;
     lastTimeRef.current = time;
@@ -34,9 +35,11 @@ export default function GradientText({ children, className='', colors=['#d96226'
     backgroundRepeat: 'repeat'
   };
 
+  const resolvedPosition = reduced ? '50% 50%' : backgroundPosition;
+
   return (
     <span onMouseEnter={handleMouseEnter} onMouseLeave={handleMouseLeave} style={{ position:'relative',display:'inline-block' }}>
-      <motion.span style={{ ...gradientStyle, backgroundPosition, WebkitBackgroundClip:'text', WebkitTextFillColor:'transparent', backgroundClip:'text', color:'transparent', display:'inline-block' }} className={className}>{children}</motion.span>
+      <motion.span style={{ ...gradientStyle, backgroundPosition:resolvedPosition, WebkitBackgroundClip:'text', WebkitTextFillColor:'transparent', backgroundClip:'text', color:'transparent', display:'inline-block' }} className={className}>{children}</motion.span>
     </span>
   );
 }

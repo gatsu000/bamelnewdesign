@@ -1,5 +1,5 @@
 import { useEffect, useState, useRef, useMemo, useCallback } from 'react';
-import { motion } from 'framer-motion';
+import { motion, useReducedMotion } from 'framer-motion';
 
 export default function DecryptedText({
   text,
@@ -16,6 +16,7 @@ export default function DecryptedText({
   clickMode = 'once',
   ...props
 }) {
+  const reduced = useReducedMotion();
   const [displayText, setDisplayText] = useState(text);
   const [isAnimating, setIsAnimating] = useState(false);
   const [revealedIndices, setRevealedIndices] = useState(new Set());
@@ -343,15 +344,16 @@ export default function DecryptedText({
           }
         : {};
 
+  if (reduced) return <span className={className}>{text}</span>;
+
   return (
     <motion.span
       ref={containerRef}
       className={`inline-block whitespace-pre-wrap ${parentClassName}`}
+      aria-label={text}
       {...animateProps}
       {...props}
     >
-      <span className="sr-only">{displayText}</span>
-
       <span aria-hidden="true">
         {displayText.split('').map((char, index) => {
           const isRevealedOrDone = revealedIndices.has(index) || (!isAnimating && isDecrypted);

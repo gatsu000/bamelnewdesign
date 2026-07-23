@@ -7,7 +7,7 @@ export const services = [
     icon: Shirt,
     label: 'Kesimden paketlemeye',
     summary: 'Model, kalıp, kumaş ve işçilik kararlarını aynı üretim akışında değerlendiriyoruz.',
-    image: 'https://images.unsplash.com/photo-1558618666-fcd25c85cd64?auto=format&fit=crop&w=1600&q=85',
+    image: '/images/textile/shirt-production.webp',
     steps: ['Model ve referansın değerlendirilmesi', 'Kumaş, kalıp ve aksesuarların netleştirilmesi', 'Uygun projelerde numune planı', 'Üretim, kontrol ve paketleme']
   },
   {
@@ -16,7 +16,7 @@ export const services = [
     icon: Sparkles,
     label: 'Marka detayları',
     summary: 'Logo, monogram ve desenleri kumaşla uyumlu biçimde planlıyoruz.',
-    image: 'https://images.unsplash.com/photo-1594633312681-425c7b97ccd1?auto=format&fit=crop&w=1600&q=85',
+    image: '/images/textile/industrial-embroidery.webp',
     steps: ['Dosya ve uygulama alanının incelenmesi', 'İplik, renk ve kumaş uyumunun değerlendirilmesi', 'Konum ve ölçü için numune yaklaşımı', 'Tekrarlanabilir uygulama kontrolü']
   },
   {
@@ -25,7 +25,7 @@ export const services = [
     icon: Droplets,
     label: 'Renk ve parti yaklaşımı',
     summary: 'Hedef renk ve kumaş yapısına göre numune ile parti tutarlılığını birlikte ele alıyoruz.',
-    image: 'https://images.unsplash.com/photo-1528459801416-a9e53bbf4e17?auto=format&fit=crop&w=1600&q=85',
+    image: '/images/textile/fabric-dyeing.webp',
     steps: ['Kumaş türü ve hedef rengin alınması', 'Referans veya numune değerlendirmesi', 'İşlem planı ve renk kontrolü', 'Kurutma ve sonraki aşama koordinasyonu']
   },
   {
@@ -34,7 +34,7 @@ export const services = [
     icon: Workflow,
     label: 'Tuşe ve görünüm',
     summary: 'Ürün tipi, kumaş yapısı ve hedef görünümü form korumayı gözeterek değerlendiriyoruz.',
-    image: 'https://images.unsplash.com/photo-1556228578-8c89e6adf883?auto=format&fit=crop&w=1600&q=85',
+    image: '/images/textile/garment-washing.webp',
     steps: ['Ürün ve kumaş yapısının değerlendirilmesi', 'Hedef görünüm ile tuşenin netleştirilmesi', 'Yıkama planı ve hassasiyet notları', 'Sonraki işlem için kontrollü geçiş']
   },
   {
@@ -43,7 +43,7 @@ export const services = [
     icon: ScanLine,
     label: 'Kontrollü geçiş',
     summary: 'Islak işlem sonrası ürünleri bir sonraki aşamaya kontrollü biçimde hazırlıyoruz.',
-    image: 'https://images.unsplash.com/photo-1542042161784-26ab9e041e89?auto=format&fit=crop&w=1600&q=85',
+    image: '/images/textile/hydro-extraction.webp',
     steps: ['Önceki işlem durumunun değerlendirilmesi', 'Kumaş hassasiyeti ve hedefin belirlenmesi', 'Nem azaltma yaklaşımının planlanması', 'Kurutma veya sonraki aşamaya hazırlık']
   },
   {
@@ -52,7 +52,7 @@ export const services = [
     icon: Wind,
     label: 'Form ve denge',
     summary: 'Kumaş hassasiyeti, form ve hedef nem dengesini birlikte ele alan kurutma yaklaşımı.',
-    image: 'https://images.unsplash.com/photo-1525507119028-ed4c629a60a3?auto=format&fit=crop&w=1600&q=85',
+    image: '/images/textile/textile-drying.webp',
     steps: ['Kumaş ve ürün hassasiyetinin değerlendirilmesi', 'Önceki işlem bilgisinin alınması', 'Kurutma koşullarının planlanması', 'Sonraki üretim adımına hazırlık']
   }
 ]

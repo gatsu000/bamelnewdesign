@@ -16,5 +16,7 @@ yarn-error.log*
 .agents/
 .omo/
 .playwright-mcp/
+.playwright-cli/
+output/playwright/
 
 .worktrees/

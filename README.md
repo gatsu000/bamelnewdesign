@@ -1,107 +1,57 @@
 # Bamel Enerji Web Sitesi
 
-Modern B2B tekstil üretim ve terbiye hizmetleri için React + Vite ile hazırlanmış kurumsal web sitesi.
+React 19 + Vite ile hazırlanmış B2B tekstil üretim sitesi. Teklif akışı, Hostinger üzerinde çalışan Express API ve SMTP e-posta teslimatı içerir.
 
-## 🚀 Quick Start
+## Yerel geliştirme
 
 ```bash
 npm install
-npm run dev
 ```
 
-Site development server'da `http://localhost:5173` adresinde çalışır.
-
-## 📦 Production Build
+Frontend ve geliştirme API'si için iki terminal kullanın:
 
 ```bash
-npm run build
-```
-
-Build sonrası `dist/` klasörü production-ready dosyaları içerir.
-
-## 🌐 Hostinger Deployment
-
-### Adım 1: Build
-```bash
-npm run build
-npm run deploy:check
-```
-
-### Adım 2: Upload
-`dist/` klasörünün tüm içeriğini Hostinger `public_html/` klasörüne yükleyin.
-
-**Yöntemler:**
-- **File Manager**: Hostinger hPanel → File Manager → public_html/
-- **FTP**: FileZilla ile dist/ içinden tüm dosyaları upload edin
-- **Detaylı talimatlar**: [DEPLOYMENT.md](./DEPLOYMENT.md) dosyasına bakın
-
-### Adım 3: Test
-- Domain adresini ziyaret edin
-- Navigation ve form testi yapın
-- Mobile responsive kontrol edin
-
-## 🛠️ Development
-
-### Local Development (with API)
-```bash
-# Terminal 1 - API Server
 npm run server
-
-# Terminal 2 - Frontend
 npm run dev
 ```
 
-### Preview Production Build
+Production uygulamasını yerelde çalıştırmak için:
+
 ```bash
 npm run build
-npm run preview
+npm start
 ```
 
-## 📧 İletişim Bilgileri
+## Hostinger + GitHub deployment
 
-- **E-posta**: info@bamelenerji.com
-- **Konum**: Diyarbakır, Türkiye
+Teklif formunun e-posta gönderebilmesi için projeyi Hostinger'da **Node.js Web App / Express** olarak dağıtın:
 
-## ⚠️ Canlıya Geçmeden Önce
+- Repository: `https://github.com/gatsu000/bamelnewdesign`
+- Build command: `npm run build`
+- Start command: `npm start`
+- Entry file: `server/index.js`
+- Node.js: 20 veya 22
+- Ortam değişkenleri: [.env.example](./.env.example) içindeki anahtarlar
 
-- [ ] Telefon numarası doğrulansın
-- [ ] E-posta adresi aktif olsun
-- [ ] Görseller gerçek üretim fotoğraflarıyla değiştirilsin
-- [ ] API endpoint'leri production ortama bağlansın
-- [ ] KVKK ve gizlilik politikası eklensin
-- [ ] SSL sertifikası aktif edilsin
+GitHub otomatik dağıtımı açıksa seçilen branch'e yapılan her push yeni build başlatır. Ayrıntılı kurulum ve statik PHP alternatifi için [DEPLOYMENT.md](./DEPLOYMENT.md) dosyasına bakın.
 
-## 📋 Teknoloji Stack
+## E-posta yapılandırması
 
-- **Frontend**: React 19, Vite 7, React Router 7
-- **UI/UX**: Framer Motion, GSAP, Lenis (smooth scroll)
-- **Icons**: Lucide React
-- **Build**: Vite (ESBuild + Rollup)
-- **API**: Node.js/Express (development only)
+Hostinger ortam değişkenlerinde `SMTP_USER`, `SMTP_PASS` ve `QUOTE_RECIPIENT` tanımlanmalıdır. Parolayı GitHub reposuna veya takip edilen herhangi bir dosyaya eklemeyin.
 
-## 📁 Proje Yapısı
+Varsayılan hedef: `info@bamelenerji.com`
 
-```
-bamel-enerji-web/
-├── src/              # React components ve styles
-├── public/           # Static assets (.htaccess)
-├── dist/            # Production build output
-├── server/          # Express API (development)
-└── package.json     # Dependencies ve scripts
-```
+## Teknoloji
 
-## 🔧 Deployment Scripts
+- React 19, Vite 7, React Router 7
+- React Hook Form + Zod
+- Framer Motion, GSAP, Lenis, Vanta
+- Express + Nodemailer
+- Hostinger Node.js Web App
 
-```bash
-npm run deploy:hostinger  # Build + deployment talimatları
-npm run deploy:check      # Build kontrolü
-```
+## Canlıya geçiş kontrolü
 
-## 📄 Lisans
-
-© 2026 Bamel Enerji - Tüm hakları saklıdır.
-
----
-
-**Deployment**: [DEPLOYMENT.md](./DEPLOYMENT.md) | **Strateji**: [Bamel-Enerji-Web-Sitesi-Strateji-Raporu.md](./Bamel-Enerji-Web-Sitesi-Strateji-Raporu.md)
-
+- `npm run build` başarıyla tamamlanmalı.
+- `/api/health` yanıtında `ok: true` ve `mailConfigured: true` görünmeli.
+- `/teklif-al` üzerinden gerçek bir talep gönderilip iki e-posta doğrulanmalı.
+- Telefon, tablet, yatay ekran ve masaüstü kontrol edilmeli.

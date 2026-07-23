@@ -37,7 +37,7 @@ function Digit({ place, value, height, digitStyle }) {
   );
 }
 
-export default function Counter({ value, fontSize=100, padding=0, places, gap=8, borderRadius=4, horizontalPadding=8, textColor='inherit', fontWeight='inherit', containerStyle, counterStyle, digitStyle, gradientHeight=16, gradientFrom='black', gradientTo='transparent', topGradientStyle, bottomGradientStyle }) {
+export default function Counter({ value, fontSize=100, padding=0, places, gap=8, borderRadius=4, horizontalPadding=8, textColor='inherit', fontWeight='inherit', containerStyle, counterStyle, digitStyle, gradientHeight=16, gradientFrom='black', gradientTo='transparent', topGradientStyle, bottomGradientStyle, accessibleLabel }) {
   const height = fontSize + padding;
   const resolvedPlaces = places || [...value.toString()].map((ch, i, a) => {
     if (ch === '.') return '.';
@@ -48,11 +48,11 @@ export default function Counter({ value, fontSize=100, padding=0, places, gap=8,
   });
 
   return (
-    <span style={{ position:'relative',display:'inline-block', ...containerStyle }}>
-      <span style={{ fontSize, display:'flex', gap, overflow:'hidden', borderRadius, paddingLeft:horizontalPadding, paddingRight:horizontalPadding, lineHeight:1, color:textColor, fontWeight, direction:'ltr', ...counterStyle }}>
+    <span style={{ position:'relative',display:'inline-block', ...containerStyle }} aria-label={accessibleLabel ?? String(value)}>
+      <span aria-hidden="true" style={{ fontSize, display:'flex', gap, overflow:'hidden', borderRadius, paddingLeft:horizontalPadding, paddingRight:horizontalPadding, lineHeight:1, color:textColor, fontWeight, direction:'ltr', ...counterStyle }}>
         {resolvedPlaces.map(place => <Digit key={place} place={place} value={value} height={height} digitStyle={digitStyle}/>)}
       </span>
-      <span style={{ pointerEvents:'none',position:'absolute',inset:0,display:'flex',flexDirection:'column',justifyContent:'space-between' }}>
+      <span aria-hidden="true" style={{ pointerEvents:'none',position:'absolute',inset:0,display:'flex',flexDirection:'column',justifyContent:'space-between' }}>
         <span style={topGradientStyle ?? { height:gradientHeight, background:`linear-gradient(to bottom, ${gradientFrom}, ${gradientTo})` }}/>
         <span style={bottomGradientStyle ?? { height:gradientHeight, background:`linear-gradient(to top, ${gradientFrom}, ${gradientTo})` }}/>
       </span>
