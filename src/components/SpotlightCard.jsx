@@ -1,8 +1,11 @@
 import { useRef } from 'react';
-const SpotlightCard = ({ children, className = '', spotlightColor = 'rgba(255, 255, 255, 0.05)', ...props }) => {
+import { useReducedMotion } from 'framer-motion';
+const SpotlightCard = ({ children, className = '', spotlightColor = 'rgba(255, 255, 255, 0.05)', as: Component = 'div', ...props }) => {
   const divRef = useRef(null);
+  const reduced = useReducedMotion();
 
-  const handleMouseMove = e => {
+  const handlePointerMove = e => {
+    if (reduced || e.pointerType === 'touch') return;
     const rect = divRef.current.getBoundingClientRect();
     const x = e.clientX - rect.left;
     const y = e.clientY - rect.top;
@@ -13,9 +16,9 @@ const SpotlightCard = ({ children, className = '', spotlightColor = 'rgba(255, 2
   };
 
   return (
-    <div ref={divRef} onMouseMove={handleMouseMove} className={`card-spotlight ${className}`} {...props}>
+    <Component ref={divRef} onPointerMove={handlePointerMove} className={`card-spotlight ${className}`} {...props}>
       {children}
-    </div>
+    </Component>
   );
 };
 

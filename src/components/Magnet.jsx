@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
+import { useReducedMotion } from 'framer-motion';
 
 const Magnet = ({
   children,
@@ -14,9 +15,11 @@ const Magnet = ({
   const [isActive, setIsActive] = useState(false);
   const [position, setPosition] = useState({ x: 0, y: 0 });
   const magnetRef = useRef(null);
+  const reduced = useReducedMotion();
 
   useEffect(() => {
-    if (disabled) {
+    const finePointer = window.matchMedia('(hover: hover) and (pointer: fine)').matches;
+    if (disabled || reduced || !finePointer) {
       setPosition({ x: 0, y: 0 });
       return;
     }
@@ -47,7 +50,7 @@ const Magnet = ({
     return () => {
       window.removeEventListener('mousemove', handleMouseMove);
     };
-  }, [padding, disabled, magnetStrength]);
+  }, [padding, disabled, magnetStrength, reduced]);
 
   const transitionStyle = isActive ? activeTransition : inactiveTransition;
 

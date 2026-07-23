@@ -1,4 +1,4 @@
-import { motion } from 'framer-motion';
+import { motion, useReducedMotion } from 'framer-motion';
 import { useEffect, useRef, useState, useMemo } from 'react';
 
 const buildKeyframes = (from, steps) => {
@@ -25,6 +25,7 @@ const BlurText = ({
   onAnimationComplete,
   stepDuration = 0.35
 }) => {
+  const shouldReduceMotion = useReducedMotion();
   const elements = animateBy === 'words' ? text.split(' ') : text.split('');
   const [inView, setInView] = useState(false);
   const ref = useRef(null);
@@ -68,6 +69,8 @@ const BlurText = ({
   const stepCount = toSnapshots.length + 1;
   const totalDuration = stepDuration * (stepCount - 1);
   const times = Array.from({ length: stepCount }, (_, i) => (stepCount === 1 ? 0 : i / (stepCount - 1)));
+
+  if (shouldReduceMotion) return <span className={className}>{text}</span>;
 
   return (
     <span ref={ref} className={className} style={{ display: 'inline-flex', flexWrap: 'wrap' }}>
