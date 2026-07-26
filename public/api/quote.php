@@ -21,6 +21,31 @@ function single_line($value, int $max = 160): string {
     return substr(trim($text ?? ''), 0, $max);
 }
 
+function consume_rate_limit(string $ipHash): ?bool {
+    $rateFile = sys_get_temp_dir() . DIRECTORY_SEPARATOR . 'bamel-quote-' . $ipHash;
+    $handle = fopen($rateFile, 'c+');
+    if ($handle === false) return null;
+    if (!flock($handle, LOCK_EX)) {
+        fclose($handle);
+        return null;
+    }
+
+    try {
+        rewind($handle);
+        $stored = json_decode((string)stream_get_contents($handle), true);
+        $now = time();
+        $recent = is_array($stored) ? array_values(array_filter($stored, fn($time) => $now - (int)$time < 900)) : [];
+        if (count($recent) >= 5) return false;
+        $recent[] = $now;
+        $encoded = json_encode($recent);
+        if ($encoded === false || !ftruncate($handle, 0) || !rewind($handle) || fwrite($handle, $encoded) !== strlen($encoded) || !fflush($handle)) return null;
+        return true;
+    } finally {
+        flock($handle, LOCK_UN);
+        fclose($handle);
+    }
+}
+
 if (($_SERVER['REQUEST_METHOD'] ?? '') !== 'POST') {
     header('Allow: POST');
     reply(405, 'Sadece POST isteği kabul edilir.');
@@ -54,6 +79,9 @@ if ($website !== '' || ($startedAt > 0 && (int)(microtime(true) * 1000) - $start
     reply(202, 'Talebiniz alındı. Ekibimiz kapsamı değerlendirecektir.', $requestId);
 }
 
+$rateAllowed = consume_rate_limit(hash('sha256', (string)($_SERVER['REMOTE_ADDR'] ?? 'unknown')));
+if ($rateAllowed === false) reply(429, 'Kısa sürede çok fazla talep gönderildi. Lütfen 15 dakika sonra tekrar deneyin.');
+
 if ($name === '' || $company === '' || $phone === '' || $email === '' || !$services ||
     $product === '' || $quantity === '' || $timeline === '' || $sample === '' ||
     strlen($details) < 20 || !$privacy
@@ -61,16 +89,7 @@ if ($name === '' || $company === '' || $phone === '' || $email === '' || !$servi
 if (!filter_var($email, FILTER_VALIDATE_EMAIL)) reply(400, 'Geçerli bir e-posta adresi girin.');
 if (!preg_match('/^[+\d\s().-]{10,30}$/', $phone)) reply(400, 'Geçerli bir telefon numarası girin.');
 
-$ipHash = hash('sha256', (string)($_SERVER['REMOTE_ADDR'] ?? 'unknown'));
-$rateFile = sys_get_temp_dir() . DIRECTORY_SEPARATOR . 'bamel-quote-' . $ipHash;
-$recent = [];
-if (is_file($rateFile)) {
-    $stored = json_decode((string)file_get_contents($rateFile), true);
-    if (is_array($stored)) $recent = array_values(array_filter($stored, fn($time) => time() - (int)$time < 900));
-}
-if (count($recent) >= 5) reply(429, 'Kısa sürede çok fazla talep gönderildi. Lütfen 15 dakika sonra tekrar deneyin.');
-$recent[] = time();
-@file_put_contents($rateFile, json_encode($recent), LOCK_EX);
+if ($rateAllowed === null || !function_exists('mail')) reply(503, 'Teklif servisi yapılandırılıyor. Lütfen info@bamelenerji.com adresinden bize ulaşın.');
 
 $message = implode("\r\n", [
     'Yeni üretim brifi — ' . $requestId,
@@ -102,4 +121,27 @@ if (!mail(RECIPIENT_EMAIL, $subject, $message, $headers)) {
     reply(502, 'Talep şu anda iletilemedi. Lütfen tekrar deneyin veya info@bamelenerji.com adresinden bize ulaşın.');
 }
 
-reply(202, 'Üretim brifiniz ekibimize ulaştı. Kapsam incelendikten sonra sizinle iletişime geçeceğiz.', $requestId);
+$confirmationMessage = implode("\r\n", [
+    'Merhaba ' . $name . ',',
+    '',
+    'Üretim brifiniz Bamel Enerji ekibine ulaştı. Kapsam incelendikten sonra paylaştığınız iletişim bilgileri üzerinden sizinle bağlantı kurulacaktır.',
+    '',
+    'Talep referansı: ' . $requestId,
+    '',
+    'Bamel Enerji',
+    RECIPIENT_EMAIL
+]);
+$confirmationSubject = '=?UTF-8?B?' . base64_encode('Üretim talebinizi aldık — ' . $requestId) . '?=';
+$confirmationHeaders = implode("\r\n", [
+    'From: Bamel Enerji Web <no-reply@bamelenerji.com>',
+    'Reply-To: ' . RECIPIENT_EMAIL,
+    'MIME-Version: 1.0',
+    'Content-Type: text/plain; charset=UTF-8',
+    'X-Mailer: PHP/' . phpversion()
+]);
+if (!mail($email, $confirmationSubject, $confirmationMessage, $confirmationHeaders)) {
+    error_log('[quote:confirmation-failed] ' . $requestId);
+    reply(202, 'Üretim brifiniz ekibimize ulaştı; ancak onay e-postası şu anda gönderilemedi.', $requestId);
+}
+
+reply(202, 'Üretim brifiniz ekibimize ulaştı. Referans numaranızı e-posta adresinize de gönderdik.', $requestId);

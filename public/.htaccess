@@ -5,8 +5,13 @@
   RewriteEngine On
   RewriteBase /
 
+  # Force HTTPS before API, asset, and SPA routing can terminate rewriting.
+  RewriteCond %{HTTPS} off
+  RewriteRule ^(.*)$ https://%{HTTP_HOST}%{REQUEST_URI} [L,R=301]
+
   # Production quote endpoint — route to PHP handler before SPA fallback.
-  # Hostinger Apache + PHP serves /api/quote.php here.
+  # Hostinger Apache + PHP serves the fallback API here.
+  RewriteRule ^api/health/?$ api/health.php [L,QSA]
   RewriteRule ^api/quote/?$ api/quote.php [L,QSA]
 
   # Never let other /api/* requests fall through to the SPA fallback.
@@ -21,10 +26,13 @@
 
 # Security Headers
 <IfModule mod_headers.c>
-  Header set X-Content-Type-Options "nosniff"
-  Header set X-Frame-Options "SAMEORIGIN"
-  Header set X-XSS-Protection "1; mode=block"
-  Header set Referrer-Policy "strict-origin-when-cross-origin"
+  Header always set X-Content-Type-Options "nosniff"
+  Header always set X-Frame-Options "SAMEORIGIN"
+  Header always set X-XSS-Protection "1; mode=block"
+  Header always set Referrer-Policy "strict-origin-when-cross-origin"
+  Header always set Permissions-Policy "camera=(), microphone=(), geolocation=()"
+  Header always set Content-Security-Policy "default-src 'self'; base-uri 'self'; connect-src 'self'; font-src 'self' data:; form-action 'self'; frame-ancestors 'self'; img-src 'self' data: blob:; object-src 'none'; script-src 'self'; style-src 'self' 'unsafe-inline'"
+  Header always unset X-Powered-By
 </IfModule>
 
 # Cache Control for Static Assets
@@ -47,12 +55,6 @@
   AddOutputFilterByType DEFLATE text/html text/plain text/xml text/css
   AddOutputFilterByType DEFLATE application/javascript application/json
   AddOutputFilterByType DEFLATE image/svg+xml
-</IfModule>
-
-# Force HTTPS
-<IfModule mod_rewrite.c>
-  RewriteCond %{HTTPS} off
-  RewriteRule ^(.*)$ https://%{HTTP_HOST}%{REQUEST_URI} [L,R=301]
 </IfModule>
 
 # Disable Directory Browsing

@@ -7,7 +7,6 @@ import { services } from './data'
 import { NotFound } from './components/shared'
 import Home from './pages/Home'
 import logo from './assets/bamel-logo-mark.png'
-import SmoothScroll from './components/SmoothScroll'
 
 const Services = lazy(() => import('./pages/Services'))
 const ServiceDetail = lazy(() => import('./pages/ServiceDetail'))
@@ -31,7 +30,6 @@ function App() {
   const showMobileActions = location.pathname !== '/teklif-al'
   return (
     <>
-      <SmoothScroll />
       <a className="skip-link" href="#main-content">İçeriğe geç</a>
       <Header />
       <PageTransition>

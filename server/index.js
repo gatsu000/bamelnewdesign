@@ -1,5 +1,6 @@
 import crypto from 'crypto'
 import express from 'express'
+import { rateLimit } from 'express-rate-limit'
 import nodemailer from 'nodemailer'
 import path from 'path'
 import { fileURLToPath } from 'url'
@@ -11,35 +12,42 @@ const port = Number(process.env.PORT) || 8787
 const isProduction = process.env.NODE_ENV === 'production'
 const mailConfigured = Boolean(process.env.SMTP_USER && process.env.SMTP_PASS)
 const quoteRecipient = process.env.QUOTE_RECIPIENT || 'info@bamelenerji.com'
-const rateWindowMs = 15 * 60 * 1000
-const rateLimit = 5
-const requestBuckets = new Map()
+const smtpPortValue = process.env.SMTP_PORT
+if (smtpPortValue !== undefined && !/^\d+$/.test(smtpPortValue)) throw new Error('SMTP_PORT must be an integer from 1 through 65535.')
+const smtpPort = smtpPortValue === undefined ? 465 : Number(smtpPortValue)
+if (!Number.isSafeInteger(smtpPort) || smtpPort < 1 || smtpPort > 65535) throw new Error('SMTP_PORT must be an integer from 1 through 65535.')
+const trustProxyHopsValue = process.env.TRUST_PROXY_HOPS
+if (trustProxyHopsValue !== undefined && !/^\d+$/.test(trustProxyHopsValue)) throw new Error('TRUST_PROXY_HOPS must be a non-negative integer.')
+const trustProxyHops = trustProxyHopsValue === undefined ? (isProduction ? 1 : 0) : Number(trustProxyHopsValue)
+if (!Number.isSafeInteger(trustProxyHops)) throw new Error('TRUST_PROXY_HOPS must be a non-negative integer.')
+const contentSecurityPolicy = "default-src 'self'; base-uri 'self'; connect-src 'self'; font-src 'self' data:; form-action 'self'; frame-ancestors 'self'; img-src 'self' data: blob:; object-src 'none'; script-src 'self'; style-src 'self' 'unsafe-inline'"
+const quoteRateLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  limit: 5,
+  message: { message: 'Kısa sürede çok fazla talep gönderildi. Lütfen 15 dakika sonra tekrar deneyin.' },
+  standardHeaders: 'draft-8',
+  legacyHeaders: false
+})
 
-app.set('trust proxy', 1)
+app.set('trust proxy', trustProxyHops === 0 ? false : trustProxyHops)
 app.disable('x-powered-by')
-app.use(express.json({ limit: '64kb', type: 'application/json' }))
 app.use((_request, response, next) => {
   response.set({
     'X-Content-Type-Options': 'nosniff',
     'X-Frame-Options': 'SAMEORIGIN',
     'Referrer-Policy': 'strict-origin-when-cross-origin',
-    'Permissions-Policy': 'camera=(), microphone=(), geolocation=()'
+    'Permissions-Policy': 'camera=(), microphone=(), geolocation=()',
+    'Content-Security-Policy': contentSecurityPolicy
   })
   next()
 })
+app.use(express.json({ limit: '64kb', type: 'application/json' }))
 
 const line = (value, max = 160) => String(value ?? '').replace(/[\r\n]+/g, ' ').trim().slice(0, max)
 const paragraph = (value, max = 2000) => String(value ?? '').trim().slice(0, max)
 const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
 const phonePattern = /^[+\d\s().-]{10,30}$/
 const createRequestId = () => `BML-${new Date().toISOString().slice(0, 10).replaceAll('-', '')}-${crypto.randomBytes(3).toString('hex').toUpperCase()}`
-const checkRate = ip => {
-  const now = Date.now()
-  const recent = (requestBuckets.get(ip) || []).filter(timestamp => now - timestamp < rateWindowMs)
-  if (recent.length >= rateLimit) return false
-  requestBuckets.set(ip, [...recent, now])
-  return true
-}
 const normalizeQuote = body => ({
   name: line(body.name, 80),
   company: line(body.company, 120),
@@ -63,8 +71,8 @@ const validateQuote = quote => {
 }
 const createTransport = () => nodemailer.createTransport({
   host: process.env.SMTP_HOST || 'smtp.hostinger.com',
-  port: Number(process.env.SMTP_PORT) || 465,
-  secure: (Number(process.env.SMTP_PORT) || 465) === 465,
+  port: smtpPort,
+  secure: smtpPort === 465,
   auth: { user: process.env.SMTP_USER, pass: process.env.SMTP_PASS }
 })
 const quoteText = (quote, requestId) => [
@@ -89,17 +97,19 @@ app.get('/api/health', (_request, response) => {
   response.json({ ok: true, service: 'bamel-enerji-api', mailConfigured })
 })
 
-app.post('/api/quote', async (request, response) => {
+const quotePreflight = (request, response, next) => {
+  if (!request.is('application/json')) return response.status(415).json({ message: 'JSON içerik türü bekleniyor.' })
+  const requestId = createRequestId()
+  const website = line(request.body?.website, 120)
+  const startedAt = Number(request.body?.startedAt) || 0
+  if (website || (startedAt && Date.now() - startedAt < 1500)) return response.status(202).json({ message: 'Talebiniz alındı. Ekibimiz kapsamı değerlendirecektir.', requestId })
+  return next()
+}
+
+app.post('/api/quote', quotePreflight, quoteRateLimiter, async (request, response) => {
   const quote = normalizeQuote(request.body ?? {})
   const requestId = createRequestId()
 
-  // Bots receive a neutral response without triggering mail.
-  if (quote.website || (quote.startedAt && Date.now() - quote.startedAt < 1500)) {
-    return response.status(202).json({ message: 'Talebiniz alındı. Ekibimiz kapsamı değerlendirecektir.', requestId })
-  }
-  if (!checkRate(request.ip || request.socket.remoteAddress || 'unknown')) {
-    return response.status(429).json({ message: 'Kısa sürede çok fazla talep gönderildi. Lütfen 15 dakika sonra tekrar deneyin.' })
-  }
   const validationError = validateQuote(quote)
   if (validationError) return response.status(400).json({ message: validationError })
 
@@ -109,9 +119,9 @@ app.post('/api/quote', async (request, response) => {
     return response.status(202).json({ message: 'Talebiniz geliştirme ortamında doğrulandı.', requestId })
   }
 
+  const transport = createTransport()
+  const from = `"${process.env.MAIL_FROM_NAME || 'Bamel Enerji Web'}" <${process.env.SMTP_USER}>`
   try {
-    const transport = createTransport()
-    const from = `"${process.env.MAIL_FROM_NAME || 'Bamel Enerji Web'}" <${process.env.SMTP_USER}>`
     await transport.sendMail({
       from,
       to: quoteRecipient,
@@ -119,6 +129,12 @@ app.post('/api/quote', async (request, response) => {
       subject: `[${requestId}] Üretim brifi — ${quote.company}`,
       text: quoteText(quote, requestId)
     })
+  } catch (error) {
+    console.error(`[quote:delivery-failed] ${requestId}`, error?.message)
+    return response.status(502).json({ message: 'Talep şu anda iletilemedi. Lütfen tekrar deneyin veya info@bamelenerji.com adresinden bize ulaşın.' })
+  }
+
+  try {
     await transport.sendMail({
       from,
       to: quote.email,
@@ -126,11 +142,18 @@ app.post('/api/quote', async (request, response) => {
       subject: `Üretim talebinizi aldık — ${requestId}`,
       text: [`Merhaba ${quote.name},`, '', 'Üretim brifiniz Bamel Enerji ekibine ulaştı. Kapsam incelendikten sonra paylaştığınız iletişim bilgileri üzerinden sizinle bağlantı kurulacaktır.', '', `Talep referansı: ${requestId}`, '', 'Bamel Enerji', quoteRecipient].join('\n')
     })
-    return response.status(202).json({ message: 'Üretim brifiniz ekibimize ulaştı. Referans numaranızı e-posta adresinize de gönderdik.', requestId })
-  } catch (error) {
-    console.error(`[quote:delivery-failed] ${requestId}`, error?.message)
-    return response.status(502).json({ message: 'Talep şu anda iletilemedi. Lütfen tekrar deneyin veya info@bamelenerji.com adresinden bize ulaşın.' })
+  } catch {
+    console.error(`[quote:confirmation-failed] ${requestId}`)
+    return response.status(202).json({ message: 'Üretim brifiniz ekibimize ulaştı; ancak onay e-postası şu anda gönderilemedi.', requestId })
   }
+  return response.status(202).json({ message: 'Üretim brifiniz ekibimize ulaştı. Referans numaranızı e-posta adresinize de gönderdik.', requestId })
+})
+
+app.use((error, request, response, next) => {
+  if (request.method !== 'POST' || !/^\/api\/quote\/?$/.test(request.path)) return next(error)
+  if (error?.type === 'entity.too.large') return response.status(413).json({ message: 'İstek gövdesi çok büyük.' })
+  if (error?.type === 'entity.parse.failed') return response.status(400).json({ message: 'Geçersiz istek gövdesi.' })
+  return next(error)
 })
 
 app.use('/api', (_request, response) => response.status(404).json({ message: 'API adresi bulunamadı.' }))
